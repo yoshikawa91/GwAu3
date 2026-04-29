@@ -25,7 +25,7 @@ Func Extend_Scanner()
 	$g_p_PostMessageA = Scanner_GetScanResult("PostMessage", $g_ap_ScanResults, "Ptr")
 	Memory_SetValue("PostMessage", Ptr(Memory_Read($g_p_PostMessageA, "dword")))
 
-	$l_p_Temp = Scanner_GetScanResult("ChatLog", $g_ap_ScanResults, "Hook")
+	Local $l_p_Temp = Scanner_GetScanResult("ChatLog", $g_ap_ScanResults, "Hook")
 	Memory_SetValue("ChatLogStart", Ptr($l_p_Temp))
 	Memory_SetValue("ChatLogReturn", Ptr($l_p_Temp + 0x5))
 
