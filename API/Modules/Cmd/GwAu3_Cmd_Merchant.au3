@@ -204,8 +204,20 @@ Func Merchant_SellItem($a_v_Item, $a_i_Quantity = 0, $a_b_Trader = False)
             Local $l_i_CostValue = Memory_Read($g_f_TraderCostValue, 'dword')
             Core_Enqueue($g_p_TraderSell, 4)
 
-            ; Wait a bit for transaction to complete
-            Sleep(250)
+
+            Local $l_i_BeforeQuantity = Memory_Read($l_p_Item + 0x4C, 'short')
+            Local $l_i_AfterQuantity
+            $l_i_Timeout = TimerInit()
+            Do 
+                Sleep(50)
+                $l_i_AfterQuantity = Memory_Read($l_p_Item + 0x4C, 'short')
+            Until $l_i_AfterQuantity < $l_i_BeforeQuantity Or TimerDiff($l_i_Timeout) > 2000
+
+			; Check timeout on sold item received
+            If TimerDiff($l_i_Timeout) > 2000 Then
+                Log_Warning("Trader sell timeout for item " & $l_i_ItemID & " (iteration " & $i & ")", "TradeMod", $g_h_EditText)
+                ExitLoop
+            EndIf
 
             $l_i_SoldCount += 1
 
