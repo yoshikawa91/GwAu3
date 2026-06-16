@@ -1,5 +1,36 @@
 #include-once
 
+#Region District
+Global Const $GC_I_DISTRICT_REGION_INTERNATIONAL = -2
+Global Const $GC_I_DISTRICT_REGION_AMERICA = 0
+Global Const $GC_I_DISTRICT_REGION_KOREA = 1
+Global Const $GC_I_DISTRICT_REGION_EUROPE = 2
+Global Const $GC_I_DISTRICT_REGION_CHINA = 3
+Global Const $GC_I_DISTRICT_REGION_JAPAN = 4
+
+Global Const $GC_I_DISTRICT_LANGUAGE_ENGLISH = 0  ; used for ee, ae, international, korea, japan, china
+Global Const $GC_I_DISTRICT_LANGUAGE_FRENCH = 2
+Global Const $GC_I_DISTRICT_LANGUAGE_GERMAN = 3
+Global Const $GC_I_DISTRICT_LANGUAGE_ITALIAN = 4
+Global Const $GC_I_DISTRICT_LANGUAGE_SPANISH = 5
+Global Const $GC_I_DISTRICT_LANGUAGE_POLISH = 9
+Global Const $GC_I_DISTRICT_LANGUAGE_RUSSIAN = 10
+
+Global Const $GC_AI_DISTRICT_REGION[12] = [ _
+	$GC_I_DISTRICT_REGION_EUROPE, $GC_I_DISTRICT_REGION_EUROPE, $GC_I_DISTRICT_REGION_EUROPE, $GC_I_DISTRICT_REGION_EUROPE, _
+	$GC_I_DISTRICT_REGION_EUROPE, $GC_I_DISTRICT_REGION_EUROPE, $GC_I_DISTRICT_REGION_EUROPE, $GC_I_DISTRICT_REGION_AMERICA, _
+	$GC_I_DISTRICT_REGION_INTERNATIONAL, $GC_I_DISTRICT_REGION_KOREA, $GC_I_DISTRICT_REGION_CHINA, $GC_I_DISTRICT_REGION_JAPAN _
+]
+
+Global Const $GC_AI_DISTRICT_LANGUAGE[12] = [ _
+	$GC_I_DISTRICT_LANGUAGE_ENGLISH, $GC_I_DISTRICT_LANGUAGE_FRENCH, $GC_I_DISTRICT_LANGUAGE_GERMAN, $GC_I_DISTRICT_LANGUAGE_ITALIAN, _
+	$GC_I_DISTRICT_LANGUAGE_SPANISH, $GC_I_DISTRICT_LANGUAGE_POLISH, $GC_I_DISTRICT_LANGUAGE_RUSSIAN, $GC_I_DISTRICT_LANGUAGE_ENGLISH, _
+	$GC_I_DISTRICT_LANGUAGE_ENGLISH, $GC_I_DISTRICT_LANGUAGE_ENGLISH, $GC_I_DISTRICT_LANGUAGE_ENGLISH, $GC_I_DISTRICT_LANGUAGE_ENGLISH _
+]
+
+
+#EndRegion District
+
 #Region MapTypes
 Global Const $GC_I_MAP_TYPE_OUTPOST = 0
 Global Const $GC_I_MAP_TYPE_EXPLORABLE = 1
@@ -276,7 +307,7 @@ Global Const $GC_I_MAP_ID_ALLCALLCLICKPOINT2 = 192
 Global Const $GC_I_MAP_ID_CAVALON = 193
 Global Const $GC_I_MAP_ID_KAINENG_CENTER = 194
 Global Const $GC_I_MAP_ID_DRAZACH_THICKET = 195
-Global Const $GC_I_MAP_ID_JAYA_BLUFF = 196
+Global Const $GC_I_MAP_ID_JAYA_BLUFFS = 196
 Global Const $GC_I_MAP_ID_SHENZUN_TUNNELS = 197
 Global Const $GC_I_MAP_ID_ARCHIPELAGOS = 198
 Global Const $GC_I_MAP_ID_MAISHANG_HILLS = 199
@@ -1150,7 +1181,7 @@ $g_as_MapLabels[191] = "Grenth's Footprint"
 $g_as_MapLabels[193] = "Cavalon"
 $g_as_MapLabels[194] = "Kaineng Center"
 $g_as_MapLabels[195] = "Drazach Thicket"
-$g_as_MapLabels[196] = "Jaya Bluff"
+$g_as_MapLabels[196] = "Jaya Bluffs"
 $g_as_MapLabels[197] = "Shenzun Tunnels"
 $g_as_MapLabels[198] = "Archipelagos"
 $g_as_MapLabels[199] = "Maishang Hills"
@@ -1951,7 +1982,7 @@ Global $g_a2D_MapArray[876][10] = [ _
 		[193, "Cavalon", 2, "Factions", 2, "Cantha", 10, "Jade Sea", 13, "City"], _
 		[194, "Kaineng Center", 2, "Factions", 2, "Cantha", 8, "Kaineng City", 13, "City"], _
 		[195, "Drazach Thicket", 2, "Factions", 2, "Cantha", 9, "Echovald Forest", 2, "Explorable Zone"], _
-		[196, "Jaya Bluff", 2, "Factions", 2, "Cantha", 11, "Shing Jea Island", 2, "Explorable Zone"], _
+		[196, "Jaya Bluffs", 2, "Factions", 2, "Cantha", 11, "Shing Jea Island", 2, "Explorable Zone"], _
 		[197, "Shenzun Tunnels", 2, "Factions", 2, "Cantha", 8, "Kaineng City", 2, "Explorable Zone"], _
 		[198, "Archipelagos", 2, "Factions", 2, "Cantha", 10, "Jade Sea", 2, "Explorable Zone"], _
 		[199, "Maishang Hills", 2, "Factions", 2, "Cantha", 10, "Jade Sea", 2, "Explorable Zone"], _
