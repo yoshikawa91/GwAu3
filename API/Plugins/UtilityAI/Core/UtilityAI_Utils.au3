@@ -48,6 +48,28 @@ Func UAI_CountEnemyInPartyAggroRange($a_f_AggroRange = 1320)
     Return 0
 EndFunc
 
+Func UAI_IsEnemyInPartyAggroRange($a_f_AggroRange = 1320)
+    Local $l_b_InRange = UAI_IsAgentInRange(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy")
+    If $l_b_InRange Then Return True
+
+    Local $l_i_HeroCount = Party_GetMyPartyInfo("ArrayHeroPartyMemberSize")
+
+    For $i = 1 To $l_i_HeroCount
+        Local $l_f_FlagX = Party_GetHeroFlagInfo($i, "FlagX")
+        Local $l_f_FlagY = Party_GetHeroFlagInfo($i, "FlagY")
+
+        If $l_f_FlagX <> 0 Or $l_f_FlagY <> 0 Then ContinueLoop
+
+        Local $l_i_HeroAgentID = Party_GetMyPartyHeroInfo($i, "AgentID")
+        If $l_i_HeroAgentID = 0 Then ContinueLoop
+
+        $l_b_InRange = UAI_IsAgentInRange($l_i_HeroAgentID, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy")
+        If $l_b_InRange Then Return True
+    Next
+
+    Return False
+EndFunc
+
 ; Get the nearest enemy that is in aggro range of any party member (player or unflagged hero)
 ; Returns the AgentID of the enemy, or 0 if none found
 ; This is useful for moving the player toward enemies that heroes have aggro'd

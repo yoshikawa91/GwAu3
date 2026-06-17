@@ -1,8 +1,4 @@
 #include-once
-#include <Constants.au3>
-#include <GUIConstantsEx.au3>
-#include <InetConstants.au3>
-#include <Array.au3>
 
 #Region WinHttp_Constants
 Global $hWINHTTPDLL__WINHTTP = ""
@@ -126,8 +122,10 @@ Global Const $WINHTTP_QUERY_CONTENT_TYPE = 1
 
 #Region Updater_ScriptVars
 ; Path to config.ini
-Global $g_s_UpdaterConfigIni = @ScriptDir & "\..\..\API\Core\config.ini"
-Global $g_s_GwAu3Dir = @ScriptDir & "\..\..\"
+Global $g_s_GwAu3Dir = Updater_FindGwAu3Root()
+If @error Then Exit MsgBox(16, "GwAu3-Updater - Invalid root directory", _
+    "Could not locate the GwAu3 root from:" & @CRLF & @ScriptDir)
+Global $g_s_UpdaterConfigIni = $g_s_GwAu3Dir & "API\Core\config.ini"
 
 ; Section names in INI-file
 Global $g_s_Section_Update = "Update"
@@ -145,6 +143,21 @@ Global $g_as_IgnoredFiles[2] = [1, "API/Core/config.ini"]
 #EndRegion Updater_ScriptVars
 
 #Region Updater_Functions
+;=================================================================
+; Resolve the GwAu3 root by walking up until we find the folder
+; containing the updater config
+;=================================================================
+Func Updater_FindGwAu3Root()
+    Local $l_s_Dir = @ScriptDir
+    While True
+        If FileExists($l_s_Dir & "\API\Core\config.ini") Then Return ($l_s_Dir & "\")
+        Local $l_s_Parent = StringRegExpReplace($l_s_Dir, "\\[^\\]+\\?$", "")
+        If $l_s_Parent = $l_s_Dir Then ExitLoop
+        $l_s_Dir = $l_s_Parent
+    WEnd
+    Return SetError(1, 0, "")
+EndFunc
+
 ;=================================================================
 ; Checks for updates to the GwAu3 GitHub repository and downloads
 ; them upon confirmation

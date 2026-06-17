@@ -217,7 +217,7 @@ API/Plugins/UtilityAI/
 ├── Core/                       # Core System
 │   ├── _Core.au3               # Entry point for core modules
 │   ├── UtilityAI_Core.au3      # System core (combat loop): UAI_Fight(), UAI_UseSkills()
-│   ├── UtilityAI_CanCast.au3   # Resource checks: UAI_CanCast(), UAI_CanAutoAttack()
+│   ├── UtilityAI_CanCast.au3   # Resource checks: UAI_CanUse(), UAI_CanAutoAttack()
 │   └── UtilityAI_Utils.au3     # Utility functions (incl. _D() debug helper)
 │
 ├── Cache/                      # UAI Cache System
@@ -413,7 +413,7 @@ Func UAI_UseSkills($a_f_X, $a_f_Y, $a_f_AggroRange = 1320, $a_f_MaxDistanceToXY 
             ↓
 ┌─────────────────────────────────────┐
 │ 8. Cast skill                       │
-│    ├─ UAI_CanCast($i)          │
+│    ├─ UAI_CanUse($i)          │
 │    │   └─ Check recharge,           │
 │    │      adrenaline, resources     │
 │    │                                │
@@ -423,7 +423,7 @@ Func UAI_UseSkills($a_f_X, $a_f_Y, $a_f_AggroRange = 1320, $a_f_MaxDistanceToXY 
 │    ├─ $g_b_CanUseSkill = Call(CanUse_XXX)
 │    │   └─ Check skill conditions    │
 │    │                                │
-│    └─ UAI_UseSkillEX($i, $g_i_BestTarget)
+│    └─ UAI_UseSkillEx($i, $g_i_BestTarget)
 │        └─ Cast the skill            │
 │        └─ Apply form change if any  │
 └─────────────────────────────────────┘
@@ -437,10 +437,10 @@ Func UAI_UseSkills($a_f_X, $a_f_Y, $a_f_AggroRange = 1320, $a_f_MaxDistanceToXY 
 
 **Note:** The loop processes each slot sequentially. When a skill is successfully cast, the loop continues to the next slot. If the player moves too far from the reference point, the loop exits early.
 
-### 3.3 UAI_UseSkillEX() Function - Cast a Skill
+### 3.3 UAI_UseSkillEx() Function - Cast a Skill
 
 ```autoit
-Func UAI_UseSkillEX($a_i_SkillSlot, $a_i_AgentID = -2)
+Func UAI_UseSkillEx($a_i_SkillSlot, $a_i_AgentID = -2)
 ```
 
 **Sequence:**
@@ -514,7 +514,7 @@ Global Enum $GC_UAI_AGENT_Ptr, _           ; Agent pointer
     $GC_UAI_AGENT_IsCasting, _             ; Is casting
     $GC_UAI_AGENT_IsAttacking, _           ; Is attacking
     $GC_UAI_AGENT_IsMoving, _              ; Is moving
-    $GC_UAI_AGENT_IsKnocked, _             ; Is knocked down
+    $GC_UAI_AGENT_IsKnockedDown, _         ; Is knocked down
     $GC_UAI_AGENT_IsDead, _                ; Is dead
     $GC_UAI_AGENT_Overcast, _              ; Overcast amount
     ; ... and more
@@ -1064,12 +1064,12 @@ EndFunc
 
 ## 7. RESOURCE MANAGEMENT SYSTEM
 
-### 7.1 UAI_CanCast() - Resource Verification
+### 7.1 UAI_CanUse() - Resource Verification
 
 This function is called **before** `CanUse_` to check if the player has the necessary resources.
 
 ```autoit
-Func UAI_CanCast($a_i_SkillSlot)
+Func UAI_CanUse($a_i_SkillSlot)
 ```
 
 **Checks performed:**
