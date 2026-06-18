@@ -211,6 +211,7 @@ Func BestTarget_RageOfTheNtouka($a_f_AggroRange)
 	Return UAI_GetPlayerInfo($GC_UAI_AGENT_ID)
 EndFunc
 
+
 ; Skill ID: 1508 - $GC_I_SKILL_ID_EXTEND_ENCHANTMENTS
 Func CanUse_ExtendEnchantments()
 	If UAI_PlayerHasEffect($GC_I_SKILL_ID_EXTEND_ENCHANTMENTS) Then Return False
