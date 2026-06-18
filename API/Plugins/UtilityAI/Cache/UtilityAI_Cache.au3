@@ -2,7 +2,7 @@
 
 ; Script Start - Add your code below here
 Func Cache_SkillBar()
-	If Map_GetInstanceInfo("IsLoading") Then Return
+	If Not Map_GetInstanceInfo("IsExplorable") Then Return False
 
 	UAI_CacheSkillBar()
 
@@ -12,6 +12,8 @@ Func Cache_SkillBar()
 	Next
 
 	If $g_b_CacheWeaponSet Then UAI_DeterminateWeaponSets()
+
+	Return True
 EndFunc   ;==>Cache_SkillBar
 
 Func Cache_FormChangeBuild($a_i_SkillSlot)

@@ -70,7 +70,6 @@ EndFunc   ;==>UAI_Fight
 
 ;~ Use this function to cast all of your skills or skills of a certain type.
 Func UAI_UseSkills($a_f_x, $a_f_y, $a_f_AggroRange = 1320, $a_f_MaxDistanceToXY = 3500)
-	;~ Static $ls_i_LowPrioSkill = 6
 	For $skillSlot = 1 To 8
 		If UAI_GetStaticSkillInfo($skillSlot, $GC_UAI_STATIC_SKILL_SkillID) = 0 Then ContinueLoop
 
@@ -115,7 +114,7 @@ Func UAI_UseSkills($a_f_x, $a_f_y, $a_f_AggroRange = 1320, $a_f_MaxDistanceToXY 
 			If $l_i_AttackTarget <> 0 Then Agent_Attack($l_i_AttackTarget, False)
 			$g_i_AttackTarget = $l_i_AttackTarget
 
-			If $g_i_LastCalledTarget = 0 Then
+			If $g_i_LastCalledTarget = 0 And $g_i_TargetMode = $GC_UAI_TARGET_MODE_CALL Then
 				Agent_CallTarget($l_i_AttackTarget)
 				$g_i_LastCalledTarget = $l_i_AttackTarget
 			EndIf
@@ -131,7 +130,7 @@ Func UAI_UseSkills($a_f_x, $a_f_y, $a_f_AggroRange = 1320, $a_f_MaxDistanceToXY 
 
 ;~ 	NORMAL SKILLS
 		UAI_TryUseSkill($skillSlot, $a_f_AggroRange)
-
+		
 ;~ 	MOVE IF TOO FAR
 		If $a_f_MaxDistanceToXY <> 0 And Agent_GetDistanceToXY($a_f_x, $a_f_y) > $a_f_MaxDistanceToXY Then ExitLoop
 
@@ -212,7 +211,12 @@ Func UAI_UseSkillEx($a_i_SkillSlot, $a_i_AgentID = -2, $a_f_AggroRange = 1320)
 
 		Local $l_f_DistanceSq = Agent_GetDistanceSq($a_i_AgentID)
 		If $l_f_DistanceSq > $l_f_AggroRangeSq Then ExitLoop
-	Until (Not UAI_GetIsCasting()) Or Agent_GetAgentInfo(-2, "IsKnockedDown")
+
+		Local $l_i_ModelState = Agent_GetAgentInfo(-2, "ModelState")
+		Local $l_b_IsKnockedDown = ($l_i_ModelState = 0x450)
+		Local $l_b_InCastingAnimation = ($l_i_ModelState = 0x41 Or $l_i_ModelState = 0x245 _
+			Or $l_i_ModelState = 0x40 Or $l_i_ModelState = 0x440)
+	Until (Not UAI_GetIsCasting() And Not $l_b_InCastingAnimation) Or $l_b_IsKnockedDown
 EndFunc   ;==>UAI_UseSkillEx
 
 ; Drop bundle if player has Item Spell effect and can cast (skill is recharged)
