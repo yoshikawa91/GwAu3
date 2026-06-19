@@ -123,8 +123,6 @@ Global Const $WINHTTP_QUERY_CONTENT_TYPE = 1
 #Region Updater_ScriptVars
 ; Path to config.ini
 Global $g_s_GwAu3Dir = Updater_FindGwAu3Root()
-If @error Then Exit MsgBox(16, "GwAu3-Updater - Invalid root directory", _
-    "Could not locate the GwAu3 root from:" & @CRLF & @ScriptDir)
 Global $g_s_UpdaterConfigIni = $g_s_GwAu3Dir & "API\Core\config.ini"
 
 ; Section names in INI-file
@@ -155,7 +153,7 @@ Func Updater_FindGwAu3Root()
         If $l_s_Parent = $l_s_Dir Then ExitLoop
         $l_s_Dir = $l_s_Parent
     WEnd
-    Return SetError(1, 0, "")
+    Return ""
 EndFunc
 
 ;=================================================================
@@ -165,6 +163,7 @@ EndFunc
 ; Return 3 = Updates disabled, 4 = Update completed
 ;=================================================================
 Func Updater_CheckForGwAu3Updates()
+    If $g_s_GwAu3Dir == "" Then Return 0
     If Not $g_b_AutoUpdate Then Return 3
 
     ; Load WinHttp.dll
