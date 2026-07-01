@@ -1,12 +1,12 @@
 #include-once
 
 If @AutoItX64 Then
-    MsgBox(16, "Error!", "Please run all bots in 32-bit (x86) mode.")
+    MsgBox(16, "GwAu3 - Invalid runtime architecture", "All bot scripts must be run in 32-bit (x86) mode.")
     Exit
 EndIf
 
 #Region Initialization
-Func Core_Initialize($a_s_GW, $a_b_ChangeTitle = True)
+Func Core_Initialize($a_v_GW, $a_b_ChangeTitle = True)
 	Log_Info("Checking for updates...", "GwAu3", $g_h_EditText)
 	Local $l_i_UpdateStatus = Updater_CheckForGwAu3Updates()
 	Switch $l_i_UpdateStatus
@@ -21,28 +21,40 @@ Func Core_Initialize($a_s_GW, $a_b_ChangeTitle = True)
 		Case 4
 			Log_Info("Update complete", "GwAu3", $g_h_EditText)
 	EndSwitch
+
 	Log_Info("Initializing...", "GwAu3", $g_h_EditText)
-    ; Open process
-    If IsString($a_s_GW) Then
-        Local $l_h_ProcessList = ProcessList("gw.exe")
-        For $i = 1 To $l_h_ProcessList[0][0]
-            $g_i_GWProcessId = $l_h_ProcessList[$i][1]
-            $g_h_GWWindow = Scanner_GetHwnd($g_i_GWProcessId)
-            Memory_Open($g_i_GWProcessId)
-            If $g_h_GWProcess Then
-				If StringCompare(StringStripWS(Scanner_ScanForCharname(), 3), StringStripWS($a_s_GW, 3)) = 0 Then
-                    ExitLoop
-                EndIf
-            EndIf
-            Memory_Close()
-            $g_h_GWProcess = 0
-        Next
-    Else
-        $g_i_GWProcessId = $a_s_GW
-        $g_h_GWWindow = Scanner_GetHwnd($g_i_GWProcessId)
-        Memory_Open($a_s_GW)
-        Scanner_ScanForCharname()
-    EndIf
+    ; Character name provided for initializing
+	If IsString($a_v_GW) Then
+		Local $l_s_CharName = StringStripWS($a_v_GW, 3)
+		Local $l_h_ProcessList = ProcessList("gw.exe")
+		Local $l_b_Found = False
+		For $i = 1 To $l_h_ProcessList[0][0]
+			Local $l_i_ProcessID = $l_h_ProcessList[$i][1]
+			Memory_Open($l_i_ProcessID)
+			If $g_h_GWProcess <> 0 And Scanner_InitializeSections() Then
+				Scanner_ScanForCharname()
+				If StringCompare(StringStripWS(Player_GetCharName(), 3), $l_s_CharName) = 0 Then
+					$g_i_GWProcessId = $l_i_ProcessID
+					$g_h_GWWindow = Scanner_GetHwnd($l_i_ProcessID)
+					$l_b_Found = True
+					ExitLoop
+				EndIf
+			EndIf
+			Memory_Close()
+		Next
+		If Not $l_b_Found Then Return SetError(1, 0, 0)
+	; ProcessID provided for initializing
+	Else
+		$g_i_GWProcessId = $a_v_GW
+		$g_h_GWWindow = Scanner_GetHwnd($a_v_GW)
+		Memory_Open($a_v_GW)
+		If $g_h_GWProcess <> 0 And Scanner_InitializeSections() Then
+			Scanner_ScanForCharname()
+		Else
+			Memory_Close()
+			Return SetError(1, 0, 0)
+		EndIf
+	EndIf
 
 	Scanner_ClearPatterns()
     ; Core patterns
@@ -103,8 +115,8 @@ Func Core_Initialize($a_s_GW, $a_b_ChangeTitle = True)
 	Scanner_AddPattern('PartyWindowButtonCallback', '837d0800578bf97411', -0x2, 'Func')
 	Scanner_AddPattern('EnterMission', '83C902890A5D', 0x24, 'Func')
 	Scanner_AddPattern('SetDifficulty', '83C41C682A010010', 0x8C, 'Func')
-	Scanner_AddPattern('OpenChest', '83C901894B24', 0x29, 'Func')
 	Scanner_AddPattern('Dialog', '894B248B4B2883E900', 0x16, 'Func')
+	Scanner_AddPattern('Interact', '894B248B4B2883E900', 0x26, 'Func')
 	Scanner_AddPattern('AiMode', '683A000010FF36', 0x1, 'Ptr')
 	Scanner_AddPattern('HeroCommand', '33D268E0010000', 0x1, 'Ptr')
 	Scanner_AddPattern('HeroSkills', '8B4E04505185FF', 0x1, 'Ptr')
@@ -120,9 +132,11 @@ Func Core_Initialize($a_s_GW, $a_b_ChangeTitle = True)
 	Scanner_AddPattern('TradePartner', '6A008D45F8C745F80100000050686501000089', -0xC, 'Hook')
 	; EncString Decoding
 	Scanner_AddPattern('ValidateAsyncDecodeStr', "P:\Code\Engine\Text\TextApi.cpp", "codedString", 'Func')
+	
 	If IsDeclared("g_b_AddPattern") Then Extend_AddPattern()
 
     $g_ap_ScanResults = Scanner_ScanAllPatterns()
+	If @error Or Not IsArray($g_ap_ScanResults) Or $g_ap_ScanResults = 0 Then Return SetError(2, 0, 0)
 
 	Local $l_p_Temp
     ;Core
@@ -275,8 +289,8 @@ Func Core_Initialize($a_s_GW, $a_b_ChangeTitle = True)
 	Memory_SetValue('UIMessage', Ptr(Scanner_GetScanResult('UIMessage', $g_ap_ScanResults, 'Func')))
 	$l_p_Temp = Scanner_GetScanResult('Dialog', $g_ap_ScanResults, 'Func')
 	Memory_SetValue('Dialog', Ptr(Scanner_GetCallTargetAddress($l_p_Temp)))
-	$l_p_Temp = Scanner_GetScanResult('OpenChest', $g_ap_ScanResults, 'Func')
-	Memory_SetValue('OpenChest', Ptr(Scanner_GetCallTargetAddress($l_p_Temp)))
+	$l_p_Temp = Scanner_GetScanResult('Interact', $g_ap_ScanResults, 'Func')
+	Memory_SetValue('Interact', Ptr(Scanner_GetCallTargetAddress($l_p_Temp)))
 	$l_p_Temp = Scanner_GetScanResult('PartySearchButtonCallback', $g_ap_ScanResults, 'Func')
 	Memory_SetValue('AddNPC', Ptr(Scanner_GetCallTargetAddress($l_p_Temp + 0xB0)))
 	Memory_SetValue('AddHero', Ptr(Scanner_GetCallTargetAddress($l_p_Temp + 0x100)))
@@ -313,7 +327,7 @@ Func Core_Initialize($a_s_GW, $a_b_ChangeTitle = True)
 	;Ui log
 	Log_Debug("UIMessage: " & Memory_GetValue('UIMessage'), "Initialize", $g_h_EditText)
 	Log_Debug("Dialog: " & Memory_GetValue('Dialog'), "Initialize", $g_h_EditText)
-	Log_Debug("OpenChest: " & Memory_GetValue('OpenChest'), "Initialize", $g_h_EditText)
+	Log_Debug("Interact: " & Memory_GetValue('Interact'), "Initialize", $g_h_EditText)
 	Log_Debug("AddNPC: " & Memory_GetValue('AddNPC'), "Initialize", $g_h_EditText)
 	Log_Debug("AddHero: " & Memory_GetValue('AddHero'), "Initialize", $g_h_EditText)
 	Log_Debug("KickNPC: " & Memory_GetValue('KickNPC'), "Initialize", $g_h_EditText)
@@ -389,6 +403,7 @@ Func Core_Initialize($a_s_GW, $a_b_ChangeTitle = True)
     $g_b_DisableRendering = Memory_GetValue('DisableRendering')
 	$g_p_MapIsLoaded = Memory_GetValue('MapIsLoaded')
 	$g_p_TradePartner = Memory_GetValue('TradePartner')
+
 	If IsDeclared("g_b_InitializeResult") Then Extend_InitializeResult()
 
     ; Setup command structures
@@ -431,7 +446,7 @@ Func Core_Initialize($a_s_GW, $a_b_ChangeTitle = True)
 	DllStructSetData($g_d_TradeOfferItem, 1, Memory_GetValue('CommandTradeOfferItem'))
 	;Ui
 	DllStructSetData($g_d_Dialog, 1, Memory_GetValue('CommandDialog'))
-	DllStructSetData($g_d_OpenChest, 1, Memory_GetValue('CommandOpenChest'))
+	DllStructSetData($g_d_Interact, 1, Memory_GetValue('CommandInteract'))
 	DllStructSetData($g_d_AddNPC, 1, Memory_GetValue('CommandAddNPC'))
 	DllStructSetData($g_d_AddHero, 1, Memory_GetValue('CommandAddHero'))
 	DllStructSetData($g_d_KickNPC, 1, Memory_GetValue('CommandKickNPC'))
