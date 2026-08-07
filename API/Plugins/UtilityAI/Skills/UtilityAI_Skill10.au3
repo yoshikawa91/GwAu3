@@ -449,9 +449,7 @@ Func BestTarget_ExpungeEnchantments($a_f_AggroRange)
 	; Concise description
 	; Touch Skill. Removes one enchantment for each non-attack skill you have. All your non-attack skills are disabled (10...6...5 seconds).
 	; Target: Enchanted enemy (highest priority), fallback to nearest enemy
-	Local $l_i_Target = UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy|UAI_Filter_IsEnchanted")
-	If $l_i_Target <> 0 Then Return $l_i_Target
-	Return UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy")
+	Return UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy|UAI_Filter_IsEnchanted")
 EndFunc
 
 ; Skill ID: 1033 - $GC_I_SKILL_ID_IMPALE
@@ -465,7 +463,7 @@ Func BestTarget_Impale($a_f_AggroRange)
 	; Concise description
 	; Skill. Deals 25...85...100 earth damage. Inflicts Deep Wound condition (5...17...20 seconds). Must follow a dual attack.
 	; Target: Nearest enemy
-	Return UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy")
+	UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy|UAI_Filter_IsLastStrikeIsDual")
 EndFunc
 
 ; Skill ID: 1039 - $GC_I_SKILL_ID_STAR_STRIKE
@@ -1069,7 +1067,7 @@ EndFunc
 Func BestTarget_JununduFeast($a_f_AggroRange)
 	; Skill. (30 seconds.) Junundu Feast is replaced with Choking Breath, Blinding Breath, or Burning Breath. Must exploit an adjacent fresh corpse.
 	; Self-target skill that exploits adjacent corpse
-	Return UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsDeadEnemy")
+	Return UAI_GetNearestAgent(-2, $GC_I_RANGE_ADJACENT, "GC_UAI_AGENT_IsExploitableCorpse")
 EndFunc
 
 ; Skill ID: 1439 - $GC_I_SKILL_ID_JUNUNDU_STRIKE
@@ -1212,7 +1210,7 @@ Func BestTarget_Awe($a_f_AggroRange)
 	; Concise description
 	; Half Range Skill. Inflicts Dazed condition (5...13...15 seconds). No effect unless target is knocked-down.
 	; Target: Knocked-down enemy (highest priority), fallback to nearest enemy
-	Local $l_i_Target = UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy|UAI_Filter_IsKnockedDown")
+	Local $l_i_Target = UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy|UAI_Filter_IsKnocked")
 	If $l_i_Target <> 0 Then Return $l_i_Target
 	Return UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy")
 EndFunc
@@ -1342,9 +1340,7 @@ Func BestTarget_AssaultEnchantments($a_f_AggroRange)
 	; Concise description
 	; Elite Skill. Removes all enchantments. Must follow a dual attack.
 	; Target: Enchanted enemy (highest priority), fallback to nearest enemy
-	Local $l_i_Target = UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy|UAI_Filter_IsEnchanted")
-	If $l_i_Target <> 0 Then Return $l_i_Target
-	Return UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy")
+	Return UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy|UAI_Filter_IsEnchanted|UAI_Filter_IsLastStrikeIsDual")
 EndFunc
 
 ; Skill ID: 1644 - $GC_I_SKILL_ID_WASTRELS_COLLAPSE
@@ -1368,7 +1364,7 @@ Func BestTarget_LiftEnchantment($a_f_AggroRange)
 	; Concise description
 	; Touch Skill. Removes one enchantment.No [sic] effect unless target foe is knocked-down.
 	; Target: Knocked-down enemy (highest priority), fallback to nearest enemy
-	Local $l_i_Target = UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy|UAI_Filter_IsKnockedDown")
+	Local $l_i_Target = UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy|UAI_Filter_IsKnocked")
 	If $l_i_Target <> 0 Then Return $l_i_Target
 	Return UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy")
 EndFunc
@@ -1530,18 +1526,17 @@ EndFunc
 Func CanUse_JununduWail()
 	; Blocked by anti-resurrect effects
 	If UAI_PlayerHasEffect($GC_I_SKILL_ID_CURSE_OF_DHUUM) Or UAI_PlayerHasEffect($GC_I_SKILL_ID_FROZEN_SOIL) Then Return False
-	; Check if there are dead allies to resurrect OR no enemies for healing
-	Local $l_i_DeadAllies = UAI_CountAgents(-2, $GC_I_RANGE_EARSHOT, "UAI_Filter_IsDeadAlly")
-	If $l_i_DeadAllies > 0 Then Return True
-	Local $l_i_Enemies = UAI_CountAgents(-2, $GC_I_RANGE_EARSHOT, "UAI_Filter_IsLivingEnemy")
-	If $l_i_Enemies = 0 And UAI_GetPlayerInfo($GC_UAI_AGENT_HP) <= 1.0 Then Return True
-	Return False
+	Return True
 EndFunc
 
 Func BestTarget_JununduWail($a_f_AggroRange)
 	; Skill. Resurrect all dead junundu in earshot. If there are no enemies in earshot, gain 500 Health for each junundu in range.
 	; Self-target skill
-	Return UAI_GetPlayerInfo($GC_UAI_AGENT_ID)
+	Local $l_i_Target = UAI_GetNearestAgent(-2, $GC_I_RANGE_EARSHOT, "UAI_Filter_IsDeadAlly")
+	If $l_i_Target <> 0 Then Return $l_i_Target 
+	If Not UAI_IsAgentInRange(-2, $GC_I_RANGE_EARSHOT, "UAI_Filter_IsLivingEnemy") And UAI_GetPlayerInfo($GC_UAI_AGENT_HP) <= 1.0 Then
+		Return UAI_GetPlayerInfo($GC_UAI_AGENT_ID)
+	EndIf
 EndFunc
 
 ; Skill ID: 1868 - ;  $GC_I_SKILL_ID_UNKNOWN
@@ -2176,7 +2171,7 @@ Func BestTarget_LowBlow($a_f_AggroRange)
 	; Concise description
 	; Touch Skill. Deals 45...70 damage. Inflicts 30...50 damage and Cracked Armor (14...20 seconds) if target foe is knocked down.
 	; Target: Knocked-down enemy (highest priority), fallback to nearest enemy
-	Local $l_i_Target = UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy|UAI_Filter_IsKnockedDown")
+	Local $l_i_Target = UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy|UAI_Filter_IsKnocked")
 	If $l_i_Target <> 0 Then Return $l_i_Target
 	Return UAI_GetNearestAgent(-2, $a_f_AggroRange, "UAI_Filter_IsLivingEnemy")
 EndFunc

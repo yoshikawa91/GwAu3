@@ -386,7 +386,7 @@ Func Core_Initialize($a_v_GW, $a_b_ChangeTitle = True)
 	Log_Debug("TradePartnerReturn: " & Memory_GetValue('TradePartnerReturn'), "Initialize", $g_h_EditText)
 	If IsDeclared("g_b_Scanner") Then Extend_Scanner()
 
-	Memory_SetValue('QueueSize', '0x00000040')
+	Memory_SetValue('QueueSize', '0x00000100')
 
     ; Modify memory
     Assembler_ModifyMemory()
@@ -464,6 +464,7 @@ Func Core_Initialize($a_v_GW, $a_b_ChangeTitle = True)
 	;UIMsg
 	DllStructSetData($g_d_MoveMap, 1, Memory_GetValue('CommandUIMsg'))
 	DllStructSetData($g_d_EquipItem, 1, Memory_GetValue('CommandUIMsg'))
+	DllStructSetData($g_d_Xunlai, 1, Memory_GetValue('CommandUIMsg'))
 	;Party
 	DllStructSetData($g_d_AddPlayer, 1, Memory_GetValue('CommandAddPlayer'))
 	DllStructSetData($g_d_KickPlayer, 1, Memory_GetValue('CommandKickPlayer'))
