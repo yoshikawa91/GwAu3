@@ -93,6 +93,22 @@ Func Core_Initialize($a_v_GW, $a_b_ChangeTitle = True)
  	Scanner_AddPattern('Salvage','33C58945FC8B45088945F08B450C8945F48B45108945F88D45EC506A10C745EC77', -0xA, 'Func')
 	;~ Scanner_AddPattern('Salvage','33C58945FC8B45088945F08B450C8945F48B45108945F88D45EC506A10C745EC76', -0xA, 'Func')
     Scanner_AddPattern('SalvageGlobal', '8B4A04538945F48B4208', 0x1, 'Ptr')
+    ; Item patterns
+    Scanner_AddPattern('InvCanIdentifyAll', '558BEC83EC??A1????????33C58945FC8D45??50E8????????8B45??83C40483F8FF????????000057', 0x1, 'Func')
+    Scanner_AddPattern('InvIdentifyAll', '558BEC83EC??A1????????33C58945FC8D45??50E8????????8B45??83C40483F8FF????????000053', 0x1, 'Func')
+    Scanner_AddPattern('InvCanDepositAllMaterials', '558BEC83EC??5733FF33C0538945FC568D4D??C745??000000005150', 0x1, 'Func')
+    Scanner_AddPattern('InvDepositAllMaterials', '558BEC83EC??A1????????33C58945FC53565733FF897D??EB068D9B', 0x1, 'Func')
+    Scanner_AddPattern('DropBundle', '8378480675058B4024EB0233C085C07405E8', 0x1, 'Ptr')
+    ; Map patterns
+    Scanner_AddPattern('QueryPropIntersect', '558BEC83EC??535657E8????????8B40148B587C', 0x1, 'Func')
+    ; Trade patterns
+    Scanner_AddPattern('TradeSessOfferItem', 'C74204030000', -0x17, 'Func')
+    Scanner_AddPattern('TradeSessSubmit', 'C74104070000', -0x14, 'Func')
+    Scanner_AddPattern('TradeSessConfirm', 'C74604020000005E', -0x1e, 'Func')
+    Scanner_AddPattern('TradeSessAbort', 'C7460401000000B8', -0x16, 'Func')
+    Scanner_AddPattern('TradeSessRevokeItem', 'C746040500000089', -0x1d, 'Func')
+    Scanner_AddPattern('TradeSessRevokeSubmit', 'C74604060000', -0x16, 'Func')
+    Scanner_AddPattern('TradeSessRevokeConfirm', 'C7460404000000B8', -0x16, 'Func')
     ; Agent patterns
     Scanner_AddPattern('AgentBase', '8B0C9085C97419', -0x3, 'Ptr')
     Scanner_AddPattern('ChangeTarget', '3BDF0F95', -0x89, 'Func')
@@ -100,7 +116,7 @@ Func Core_Initialize($a_v_GW, $a_b_ChangeTitle = True)
     Scanner_AddPattern('MyID', '83EC08568BF13B15', -0x3, 'Ptr')
     ; Map patterns
     Scanner_AddPattern('Move', '558BEC83EC208D45F0', 0x1, 'Func')
-    Scanner_AddPattern('ClickCoords', '8B451C85C0741CD945F8', 0xD, 'Ptr')
+    Scanner_AddPattern('ClickCoords', 'D91D????????D945FCD91D????????C705????????FFFFFFFF', 0x3, 'Ptr')
     Scanner_AddPattern('InstanceInfo', '6A2C50E80000000083C408C7', 0xE, 'Ptr')
 ;~ 	Scanner_AddPattern('WorldConst', "P:\Code\Gw\Const\ConstWorld.cpp", "index < arrsize(s_worldData)", 'Ptr', 0x16)
     Scanner_AddPattern('WorldConst', '8D0476C1E00405', 0x8, 'Ptr')
@@ -114,11 +130,11 @@ Func Core_Initialize($a_v_GW, $a_b_ChangeTitle = True)
 	Scanner_AddPattern('PartySearchButtonCallback', '8B450883EC08568BF18B480483F90E', -0x2, 'Func')
 	Scanner_AddPattern('PartyWindowButtonCallback', '837d0800578bf97411', -0x2, 'Func')
 	Scanner_AddPattern('EnterMission', '83C902890A5D', 0x24, 'Func')
-	Scanner_AddPattern('SetDifficulty', '83C41C682A010010', 0x8C, 'Func')
+	Scanner_AddPattern('SetDifficulty', '833B000F85????????FF7020E8', 0xD, 'Func')
 	Scanner_AddPattern('Dialog', '894B248B4B2883E900', 0x16, 'Func')
 	Scanner_AddPattern('Interact', '894B248B4B2883E900', 0x26, 'Func')
 	Scanner_AddPattern('AiMode', '683A000010FF36', 0x1, 'Ptr')
-	Scanner_AddPattern('HeroCommand', '33D268E0010000', 0x1, 'Ptr')
+	Scanner_AddPattern('HeroCommand', '33D268E001000068????????8D4A08', 0x1, 'Ptr')
 	Scanner_AddPattern('HeroSkills', '8B4E04505185FF', 0x1, 'Ptr')
 	Scanner_AddPattern('PlayerAdd', "P:\Code\Gw\Ui\Game\Party\PtInvite.cpp", "m_invitePlayerId", 'Ptr')
 	Scanner_AddPattern('PlayerKick', "P:\Code\Gw\Ui\Game\Party\PtUtil.cpp", "playerId == MissionCliGetPlayerId()", 'Ptr')
@@ -129,7 +145,7 @@ Func Core_Initialize($a_v_GW, $a_b_ChangeTitle = True)
 	Scanner_AddPattern('Render', 'F6C401741C68', -0x68, 'Hook')
 	Scanner_AddPattern('LoadFinished', '2BD9C1E303', 0xA0, 'Hook')
 	Scanner_AddPattern('Trader', '8D4DFC51576A5650', -0x3C, 'Hook')
-	Scanner_AddPattern('TradePartner', '6A008D45F8C745F80100000050686501000089', -0xC, 'Hook')
+	Scanner_AddPattern('TradePartner', '6A008D45F8C745F8010000005068????????89', -0xC, 'Hook')
 	; EncString Decoding
 	Scanner_AddPattern('ValidateAsyncDecodeStr', "P:\Code\Engine\Text\TextApi.cpp", "codedString", 'Func')
 	
@@ -146,7 +162,7 @@ Func Core_Initialize($a_v_GW, $a_b_ChangeTitle = True)
 	$g_p_StatusCode = Memory_Read(Scanner_GetScanResult('StatusCode', $g_ap_ScanResults, 'Ptr'))
 	$g_p_Login = Memory_Read(Scanner_GetScanResult('Login', $g_ap_ScanResults, 'Ptr'))
 	$g_p_InGame = Memory_Read(Scanner_GetScanResult('InGame', $g_ap_ScanResults, 'Ptr'))
-    $g_p_PreGame = Memory_Read(Scanner_GetScanResult('PreGame', $g_ap_ScanResults, 'Ptr') + 0x35)
+    $g_p_PreGame = Memory_Read(Scanner_GetScanResult('PreGame', $g_ap_ScanResults, 'Ptr') + 0x33)
     $g_p_FrameArray = Memory_Read(Scanner_GetScanResult('FrameArray', $g_ap_ScanResults, 'Ptr') - 0x13)
 	$g_p_SceneContext = Memory_Read(Scanner_GetScanResult('SceneContext', $g_ap_ScanResults, 'Ptr') + 0x1B)
 	$g_p_TimeOnMap = $g_p_SceneContext + 0xC
@@ -229,12 +245,31 @@ Func Core_Initialize($a_v_GW, $a_b_ChangeTitle = True)
     Memory_SetValue('Transaction', Ptr(Scanner_GetScanResult('Transaction', $g_ap_ScanResults, 'Func')))
     Memory_SetValue('RequestQuote', Ptr(Scanner_GetScanResult('RequestQuote', $g_ap_ScanResults, 'Func')))
     Memory_SetValue('Salvage', Ptr(Scanner_GetScanResult('Salvage', $g_ap_ScanResults, 'Func')))
+    Memory_SetValue('InvCanIdentifyAll', Ptr(Scanner_GetScanResult('InvCanIdentifyAll', $g_ap_ScanResults, 'Func')))
+    Memory_SetValue('InvIdentifyAll', Ptr(Scanner_GetScanResult('InvIdentifyAll', $g_ap_ScanResults, 'Func')))
+    Memory_SetValue('InvCanDepositAllMaterials', Ptr(Scanner_GetScanResult('InvCanDepositAllMaterials', $g_ap_ScanResults, 'Func')))
+    Memory_SetValue('InvDepositAllMaterials', Ptr(Scanner_GetScanResult('InvDepositAllMaterials', $g_ap_ScanResults, 'Func')))
+    Memory_SetValue('DropBundle', Ptr(Scanner_ToFunctionStart(Scanner_GetScanResult('DropBundle', $g_ap_ScanResults, 'Ptr'))))
+    Memory_SetValue('QueryPropIntersect', Ptr(Scanner_GetScanResult('QueryPropIntersect', $g_ap_ScanResults, 'Func')))
+    Memory_SetValue('TradeSessOfferItem', Ptr(Scanner_GetScanResult('TradeSessOfferItem', $g_ap_ScanResults, 'Func')))
+    Memory_SetValue('TradeSessSubmit', Ptr(Scanner_GetScanResult('TradeSessSubmit', $g_ap_ScanResults, 'Func')))
+    Memory_SetValue('TradeSessConfirm', Ptr(Scanner_GetScanResult('TradeSessConfirm', $g_ap_ScanResults, 'Func')))
+    Memory_SetValue('TradeSessAbort', Ptr(Scanner_GetScanResult('TradeSessAbort', $g_ap_ScanResults, 'Func')))
+    Memory_SetValue('TradeSessRevokeItem', Ptr(Scanner_GetScanResult('TradeSessRevokeItem', $g_ap_ScanResults, 'Func')))
+    Memory_SetValue('TradeSessRevokeSubmit', Ptr(Scanner_GetScanResult('TradeSessRevokeSubmit', $g_ap_ScanResults, 'Func')))
+    Memory_SetValue('TradeSessRevokeConfirm', Ptr(Scanner_GetScanResult('TradeSessRevokeConfirm', $g_ap_ScanResults, 'Func')))
 	;Trader log
 	Log_Debug("BuyItemBase: " & Memory_GetValue('BuyItemBase'), "Initialize", $g_h_EditText)
 	Log_Debug("SalvageGlobal: " & Memory_GetValue('SalvageGlobal'), "Initialize", $g_h_EditText)
 	Log_Debug("Transaction: " & Memory_GetValue('Transaction'), "Initialize", $g_h_EditText)
 	Log_Debug("RequestQuote: " & Memory_GetValue('RequestQuote'), "Initialize", $g_h_EditText)
 	Log_Debug("Salvage: " & Memory_GetValue('Salvage'), "Initialize", $g_h_EditText)
+	Log_Debug("InvCanIdentifyAll: " & Memory_GetValue('InvCanIdentifyAll'), "Initialize", $g_h_EditText)
+	Log_Debug("InvIdentifyAll: " & Memory_GetValue('InvIdentifyAll'), "Initialize", $g_h_EditText)
+	Log_Debug("InvCanDepositAllMaterials: " & Memory_GetValue('InvCanDepositAllMaterials'), "Initialize", $g_h_EditText)
+	Log_Debug("InvDepositAllMaterials: " & Memory_GetValue('InvDepositAllMaterials'), "Initialize", $g_h_EditText)
+	Log_Debug("DropBundle: " & Memory_GetValue('DropBundle'), "Initialize", $g_h_EditText)
+	Log_Debug("QueryPropIntersect: " & Memory_GetValue('QueryPropIntersect'), "Initialize", $g_h_EditText)
 
 	;Agent
 	$g_p_AgentBase = Memory_Read(Scanner_GetScanResult('AgentBase', $g_ap_ScanResults, 'Ptr'))
@@ -397,6 +432,10 @@ Func Core_Initialize($a_v_GW, $a_b_ChangeTitle = True)
     $g_i_TraderQuoteID = Memory_GetValue('TraderQuoteID')
     $g_i_TraderCostID = Memory_GetValue('TraderCostID')
     $g_f_TraderCostValue = Memory_GetValue('TraderCostValue')
+    $g_i_InvCanIdentifyAllResult = Memory_GetValue('InvCanIdentifyAllResult')
+    $g_i_InvIdentifyAllResult = Memory_GetValue('InvIdentifyAllResult')
+    $g_i_InvCanDepositAllMaterialsResult = Memory_GetValue('InvCanDepositAllMaterialsResult')
+    $g_i_InvDepositAllMaterialsResult = Memory_GetValue('InvDepositAllMaterialsResult')
 	$g_p_SavedIndex = Memory_GetValue('SavedIndex')
 	$g_i_QueueCounter = Memory_Read(Memory_GetValue('QueueCounter'))
     $g_i_QueueSize = Memory_GetValue('QueueSize') - 1
@@ -432,6 +471,11 @@ Func Core_Initialize($a_v_GW, $a_b_ChangeTitle = True)
     DllStructSetData($g_d_TraderBuy, 1, Memory_GetValue('CommandTraderBuy'))
     DllStructSetData($g_d_TraderSell, 1, Memory_GetValue('CommandTraderSell'))
     DllStructSetData($g_d_Salvage, 1, Memory_GetValue('CommandSalvage'))
+    DllStructSetData($g_d_InvCanIdentifyAll, 1, Memory_GetValue('CommandInvCanIdentifyAll'))
+    DllStructSetData($g_d_InvIdentifyAll, 1, Memory_GetValue('CommandInvIdentifyAll'))
+    DllStructSetData($g_d_InvCanDepositAllMaterials, 1, Memory_GetValue('CommandInvCanDepositAllMaterials'))
+    DllStructSetData($g_d_InvDepositAllMaterials, 1, Memory_GetValue('CommandInvDepositAllMaterials'))
+    DllStructSetData($g_d_DropBundle, 1, Memory_GetValue('CommandDropBundle'))
 	$g_p_CraftItem = Memory_GetValue('CommandCraftItem')
 	$g_p_CollectorExchange = Memory_GetValue('CommandCollectorExchange')
 	;Agent
@@ -466,12 +510,26 @@ Func Core_Initialize($a_v_GW, $a_b_ChangeTitle = True)
 	DllStructSetData($g_d_MoveMap, 1, Memory_GetValue('CommandUIMsg'))
 	DllStructSetData($g_d_EquipItem, 1, Memory_GetValue('CommandUIMsg'))
 	DllStructSetData($g_d_Xunlai, 1, Memory_GetValue('CommandUIMsg'))
+	DllStructSetData($g_d_CloseDialog, 1, Memory_GetValue('CommandUIMsg'))
+	DllStructSetData($g_d_ApplyUpgrade, 1, Memory_GetValue('CommandUIMsg'))
 	;Party
 	DllStructSetData($g_d_AddPlayer, 1, Memory_GetValue('CommandAddPlayer'))
 	DllStructSetData($g_d_KickPlayer, 1, Memory_GetValue('CommandKickPlayer'))
 	DllStructSetData($g_d_KickInvitedPlayer, 1, Memory_GetValue('CommandKickInvitedPlayer'))
 	DllStructSetData($g_d_RejectInvitation, 1, Memory_GetValue('CommandRejectInvitation'))
 	DllStructSetData($g_d_AcceptInvitation, 1, Memory_GetValue('CommandAcceptInvitation'))
+	;Target guard diagnosis
+	$g_p_TargetOrderCount = Memory_GetValue('TargetOrderCount')
+	$g_p_TargetRejectCount = Memory_GetValue('TargetRejectCount')
+	$g_p_TargetRejectLast = Memory_GetValue('TargetRejectLast')
+	;Prop ray casting
+	DllStructSetData($g_d_PropRay, 1, Memory_GetValue('CommandPropRay'))
+	$g_p_PropRayResult = Memory_GetValue('PropRayResult')
+	$g_p_PropRayReady = Memory_GetValue('PropRayReady')
+	;Trade session natives
+	DllStructSetData($g_d_TradeSession, 1, Memory_GetValue('CommandTradeSession'))
+	$g_p_TradeSessResult = Memory_GetValue('TradeSessResult')
+	$g_p_TradeSessReady = Memory_GetValue('TradeSessReady')
 	;EncString
 	DllStructSetData($g_d_DecodeEncString, 1, Memory_GetValue('CommandDecodeEncString'))
 	$g_p_DecodeInputPtr = Memory_GetValue('DecodeInputPtr')
@@ -485,26 +543,58 @@ Func Core_Initialize($a_v_GW, $a_b_ChangeTitle = True)
 EndFunc
 #EndRegion Initialization
 
+;~ Description: Queue a command, writing its body before its code pointer.
 Func Core_Enqueue_($a_p_Ptr, $a_i_Size)
-    Local $l_i_Slot = $g_p_QueueBase + (256 * $g_i_QueueCounter)
-
-    DllCall("kernel32.dll", "bool", "WriteProcessMemory", "handle", $g_h_GWProcess, "ptr", $l_i_Slot + 4, "ptr", $a_p_Ptr + 4, "ulong_ptr", $a_i_Size - 4,"ptr", 0)
-    DllCall("kernel32.dll", "bool", "WriteProcessMemory", "handle", $g_h_GWProcess, "ptr", $l_i_Slot, "ptr", $a_p_Ptr, "ulong_ptr", 4, "ptr", 0)
-
-    If $g_i_QueueCounter = $g_i_QueueSize Then
-        $g_i_QueueCounter = 0
-    Else
-        $g_i_QueueCounter += 1
-    EndIf
+	Core_EnqueueGuarded($a_p_Ptr, $a_i_Size, True)
 EndFunc
 
+;~ Description: Queue a command in a single write.
 Func Core_Enqueue($a_p_Ptr, $a_i_Size)
-	DllCall($g_h_Kernel32, 'int', 'WriteProcessMemory', 'int', $g_h_GWProcess, 'int', 256 * $g_i_QueueCounter + $g_p_QueueBase, 'ptr', $a_p_Ptr, 'int', $a_i_Size, 'int', '')
-	If $g_i_QueueCounter = $g_i_QueueSize Then
-		$g_i_QueueCounter = 0
-	Else
-		$g_i_QueueCounter = $g_i_QueueCounter + 1
+	Core_EnqueueGuarded($a_p_Ptr, $a_i_Size, False)
+EndFunc
+
+; The injected reader runs the slots strictly in order and waits on an empty one. An Adlib can interrupt an enqueue
+; between any two statements and enqueue its own command: the two then share the counter and either skip a slot
+; (the queue stalls until the counter wraps round) or write the same one (a command is lost). An enqueue that finds
+; another one running parks its command instead, and the running one writes it before returning. Adlibs run to
+; completion before the code they interrupted resumes, so only the interrupted enqueue drains the parked commands.
+Func Core_EnqueueGuarded($a_p_Ptr, $a_i_Size, $a_b_PointerLast)
+	If $g_b_QueueBusy Then
+		Local $l_d_Command = DllStructCreate('byte[' & $a_i_Size & ']', $a_p_Ptr)
+		$g_av_QueuePending[$g_i_QueuePendingTail][0] = DllStructGetData($l_d_Command, 1)
+		$g_av_QueuePending[$g_i_QueuePendingTail][1] = $a_b_PointerLast
+		$g_i_QueuePendingTail = Mod($g_i_QueuePendingTail + 1, UBound($g_av_QueuePending))
+		Return
 	EndIf
+
+	$g_b_QueueBusy = True
+	Core_WriteQueueSlot($a_p_Ptr, $a_i_Size, $a_b_PointerLast)
+	While 1
+		While $g_i_QueuePendingHead <> $g_i_QueuePendingTail
+			Local $l_d_Pending = DllStructCreate('byte[' & BinaryLen($g_av_QueuePending[$g_i_QueuePendingHead][0]) & ']')
+			DllStructSetData($l_d_Pending, 1, $g_av_QueuePending[$g_i_QueuePendingHead][0])
+			Core_WriteQueueSlot(DllStructGetPtr($l_d_Pending), DllStructGetSize($l_d_Pending), $g_av_QueuePending[$g_i_QueuePendingHead][1])
+			$g_i_QueuePendingHead = Mod($g_i_QueuePendingHead + 1, UBound($g_av_QueuePending))
+		WEnd
+		$g_b_QueueBusy = False
+		; An Adlib may have parked a command between the last check and the reset
+		If $g_i_QueuePendingHead = $g_i_QueuePendingTail Then ExitLoop
+		$g_b_QueueBusy = True
+	WEnd
+EndFunc
+
+;~ Description: Write a command into the slot at the queue counter, then advance the counter. Only called by Core_EnqueueGuarded.
+Func Core_WriteQueueSlot($a_p_Ptr, $a_i_Size, $a_b_PointerLast)
+	Local $l_p_Slot = $g_p_QueueBase + 256 * $g_i_QueueCounter
+
+	If $a_b_PointerLast Then
+		DllCall($g_h_Kernel32, "bool", "WriteProcessMemory", "handle", $g_h_GWProcess, "ptr", $l_p_Slot + 4, "ptr", $a_p_Ptr + 4, "ulong_ptr", $a_i_Size - 4, "ptr", 0)
+		DllCall($g_h_Kernel32, "bool", "WriteProcessMemory", "handle", $g_h_GWProcess, "ptr", $l_p_Slot, "ptr", $a_p_Ptr, "ulong_ptr", 4, "ptr", 0)
+	Else
+		DllCall($g_h_Kernel32, 'int', 'WriteProcessMemory', 'int', $g_h_GWProcess, 'int', $l_p_Slot, 'ptr', $a_p_Ptr, 'int', $a_i_Size, 'int', '')
+	EndIf
+
+	$g_i_QueueCounter = ($g_i_QueueCounter = $g_i_QueueSize) ? 0 : $g_i_QueueCounter + 1
 EndFunc
 
 Func Core_PerformAction($a_i_Action, $a_i_Flag, $a_i_Type = 0)

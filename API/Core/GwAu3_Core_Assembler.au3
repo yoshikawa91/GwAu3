@@ -1866,8 +1866,11 @@ Func Assembler_ModifyMemory()
 	Assembler_CreateCraftItemCommand()
 	Assembler_CreateCollectorExchangeCommand()
 	Assembler_CreateSalvageCommand()
+	Assembler_CreateItemCommands()
 	Assembler_CreateAgentCommands()
 	Assembler_CreateMapCommands()
+	Assembler_CreatePropRayCommand()
+	Assembler_CreateTradeSessionCommand()
 	Assembler_CreateTradeCommands()
 	Assembler_CreateUICommands()
 	Assembler_CreatePartyCommands()
@@ -1918,6 +1921,20 @@ Func Assembler_CreateData()
 	_('MapIsLoaded/4')
 	_('TradePartner/4')
 	_('AgentCopyCount/4')
+	_('InvCanIdentifyAllResult/4')
+	_('InvIdentifyAllResult/4')
+	_('InvCanDepositAllMaterialsResult/4')
+	_('InvDepositAllMaterialsResult/4')
+	_('PropRayResult/96')        ; GC_I_PROPRAY_MAX results of 12 bytes
+	_('PropRayReady/4')          ; 0 = pending, 1 = results ready, 2 = skipped, no props
+	_('TradeSessResult/4')       ; Return value of the trade session native
+	_('TradeSessReady/4')        ; 0 = pending, 1 = value ready, 2 = skipped, no trade context
+
+	; Target guard diagnosis
+	_('TargetOrderCount/4')      ; Target orders actually dequeued by the game thread
+	_('TargetRejectCount/4')     ; Target orders refused since the ASM was injected
+	_('TargetRejectLast/4')      ; Last refused id, used to classify the real cause
+
 	; EncString decoding buffers
 	_('DecodeReady/4')           ; Flag: 1 when decode is complete
 	_('DecodeInputPtr/256')      ; Input: encoded wchar string (max 128 wchars)
@@ -2386,12 +2403,64 @@ Func Assembler_CreateSalvageCommand()
     _('ljmp CommandReturn')
 EndFunc
 
+Func Assembler_CreateItemCommands()
+	_('CommandInvCanIdentifyAll:')
+	_('call InvCanIdentifyAll')
+	_('mov dword[InvCanIdentifyAllResult],eax')
+	_('ljmp CommandReturn')
+
+	_('CommandInvIdentifyAll:')
+	_('call InvIdentifyAll')
+	_('mov dword[InvIdentifyAllResult],eax')
+	_('ljmp CommandReturn')
+
+	_('CommandInvCanDepositAllMaterials:')
+	_('call InvCanDepositAllMaterials')
+	_('mov dword[InvCanDepositAllMaterialsResult],eax')
+	_('ljmp CommandReturn')
+
+	_('CommandInvDepositAllMaterials:')
+	_('call InvDepositAllMaterials')
+	_('mov dword[InvDepositAllMaterialsResult],eax')
+	_('ljmp CommandReturn')
+
+	_('CommandDropBundle:')
+	_('call DropBundle')
+	_('ljmp CommandReturn')
+EndFunc
+
 Func Assembler_CreateAgentCommands()
+	; The id is frozen on the AutoIt side and the native runs a frame later. If it no
+	; longer resolves, SelectionUpdate hits a fatal assertion, AvSelect.cpp(780), and
+	; kills the client. Replay ManagerFindAgent's exact contract in the
+	; game thread. Id 0 is NOT a stale id: SelectionUpdate tests manualAgentId before
+	; resolving it, so 0 clears the selection and must reach the native.
 	_('CommandChangeTarget:')
+	_('jmp ChangeTargetStart')
+
+	; Error exit on top, so every guard jump stays backwards and short
+	_('ChangeTargetSkip:')
+	_('inc dword[TargetRejectCount]')
+	_('mov dword[TargetRejectLast],ebx')
+	_('ljmp CommandReturn')
+
+	_('ChangeTargetStart:')
+	_('inc dword[TargetOrderCount]')  ; denominator: 0 rejects on 0 orders proves nothing
+	_('mov ebx,dword[eax+4]')
+	_('test ebx,ebx')
+	_('jz ChangeTargetCall')       ; 0 is a legitimate clear target, the native takes it
+	_('cmp ebx,dword[MaxAgents]')
+	_('jae ChangeTargetSkip')          ; unsigned, like the native's JC
+	_('mov esi,dword[AgentBase]')
+	_('lea esi,dword[esi+ebx*4]')
+	_('mov esi,dword[esi]')
+	_('test esi,esi')
+	_('jz ChangeTargetSkip')
+
+	_('ChangeTargetCall:')
 	_('xor edx,edx')
 	_('push edx')
-	_('mov eax,dword[eax+4]')
-	_('push eax')
+	_('push ebx')
 	_('call ChangeTarget')
 	_('add esp,8')
 	_('ljmp CommandReturn')
@@ -2431,6 +2500,113 @@ Func Assembler_CreateMapCommands()
 	_('push eax')
 	_('call Move')
 	_('pop eax')
+	_('ljmp CommandReturn')
+EndFunc
+
+; Ray cast against the map props: count at slot+4, then rays of 28 bytes from slot+8.
+Func Assembler_CreatePropRayCommand()
+	_('CommandPropRay:')
+	_('jmp PropRayStart')
+
+	; The map can unload between enqueue and execution, and the native asserts on null props
+	_('PropRaySkip:')
+	_('mov dword[PropRayReady],2')
+	_('ljmp CommandReturn')
+
+	_('PropRayStart:')
+	_('mov esi,eax')
+	_('mov eax,dword[BasePointer]')
+	_('test eax,eax')
+	_('jz PropRaySkip')
+	_('mov eax,dword[eax]')
+	_('test eax,eax')
+	_('jz PropRaySkip')
+	_('mov eax,dword[eax+18]')
+	_('test eax,eax')
+	_('jz PropRaySkip')
+	_('mov eax,dword[eax+14] -> 8B 40 14')
+	_('test eax,eax')
+	_('jz PropRaySkip')
+	_('mov eax,dword[eax+7C] -> 8B 40 7C')
+	_('test eax,eax')
+	_('jz PropRaySkip')
+	_('mov ebx,dword[eax+19C]')
+	_('test ebx,ebx')
+	_('jz PropRaySkip')
+
+	; ebx holds the loop counter: the native preserves ebx, esi and edi, but not ecx or edx
+	_('mov ebx,dword[esi+4] -> 8B 5E 04')
+	_('test ebx,ebx')
+	_('jz PropRaySkip')
+	_('cmp ebx,8')
+	_('ja PropRaySkip')
+
+	_('push PropRayResult')
+	_('pop edi')
+	_('add esi,8')
+
+	_('PropRayLoop:')
+	_('lea eax,dword[edi+8] -> 8D 47 08')
+	_('push eax')
+	_('lea eax,dword[esi+18] -> 8D 46 18')
+	_('push eax')
+	_('lea eax,dword[esi+C] -> 8D 46 0C')
+	_('push eax')
+	_('push esi')
+	_('call QueryPropIntersect')
+	_('add esp,10')
+	_('mov dword[edi],eax')
+	_('mov eax,dword[esi+18] -> 8B 46 18')
+	_('mov dword[edi+4],eax -> 89 47 04')
+	_('add esi,1C')
+	_('add edi,C')
+	_('dec ebx -> 4B')
+	_('jnz PropRayLoop')
+
+	_('mov dword[PropRayReady],1')
+	_('ljmp CommandReturn')
+EndFunc
+
+; Calls one TradeClient::Session* native: native at slot+4, first argument at +8, second at +C.
+; The context is resolved here, not in AutoIt: it can be freed between enqueue and execution.
+Func Assembler_CreateTradeSessionCommand()
+	_('CommandTradeSession:')
+	_('jmp TradeSessStart')
+
+	_('TradeSessSkip:')
+	_('mov dword[TradeSessReady],2')
+	_('ljmp CommandReturn')
+
+	_('TradeSessStart:')
+	_('mov esi,eax')
+	_('mov eax,dword[BasePointer]')
+	_('test eax,eax')
+	_('jz TradeSessSkip')
+	_('mov eax,dword[eax]')
+	_('test eax,eax')
+	_('jz TradeSessSkip')
+	_('mov eax,dword[eax+18]')
+	_('test eax,eax')
+	_('jz TradeSessSkip')
+	_('mov eax,dword[eax+58] -> 8B 40 58')
+	_('test eax,eax')
+	_('jz TradeSessSkip')
+
+	_('mov ebx,dword[esi+4] -> 8B 5E 04')
+	_('test ebx,ebx')
+	_('jz TradeSessSkip')
+
+	; cdecl with the context first: three dwords are always pushed, the callee ignores the extras
+	_('push dword[esi+C] -> FF 76 0C')
+	_('push dword[esi+8] -> FF 76 08')
+	_('push eax')
+	_('call ebx -> FF D3')
+	_('add esp,C')
+
+	_('push TradeSessResult')
+	_('pop edi')
+	_('mov dword[edi],eax')
+	_('mov dword[TradeSessReady],1')
 	_('ljmp CommandReturn')
 EndFunc
 

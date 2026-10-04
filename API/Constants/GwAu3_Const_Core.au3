@@ -28,6 +28,11 @@ Global $g_p_SavedIndex
 Global $g_i_QueueCounter
 Global $g_i_QueueSize
 Global $g_p_QueueBase
+; Core_EnqueueGuarded: set while an enqueue runs; commands from an Adlib that interrupted it wait in the ring below
+Global $g_b_QueueBusy = False
+Global $g_av_QueuePending[256][2]
+Global $g_i_QueuePendingHead = 0
+Global $g_i_QueuePendingTail = 0
 Global $g_p_PreGame
 Global $g_p_Login
 Global $g_p_InGame
@@ -90,6 +95,22 @@ Global $g_d_TraderSell = DllStructCreate('ptr')
 Global $g_p_TraderSell = DllStructGetPtr($g_d_TraderSell)
 Global $g_d_Salvage = DllStructCreate('ptr;dword;dword;dword')
 Global $g_p_Salvage = DllStructGetPtr($g_d_Salvage)
+
+;Item
+Global $g_i_InvCanIdentifyAllResult ; Result slot for InvCanIdentifyAll
+Global $g_i_InvIdentifyAllResult    ; Result slot for InvIdentifyAll
+Global $g_d_InvCanIdentifyAll = DllStructCreate('ptr')
+Global $g_p_InvCanIdentifyAll = DllStructGetPtr($g_d_InvCanIdentifyAll)
+Global $g_d_InvIdentifyAll = DllStructCreate('ptr')
+Global $g_p_InvIdentifyAll = DllStructGetPtr($g_d_InvIdentifyAll)
+Global $g_i_InvCanDepositAllMaterialsResult ; Result slot for InvCanDepositAllMaterials
+Global $g_i_InvDepositAllMaterialsResult    ; Result slot for InvDepositAllMaterials
+Global $g_d_InvCanDepositAllMaterials = DllStructCreate('ptr')
+Global $g_p_InvCanDepositAllMaterials = DllStructGetPtr($g_d_InvCanDepositAllMaterials)
+Global $g_d_InvDepositAllMaterials = DllStructCreate('ptr')
+Global $g_p_InvDepositAllMaterials = DllStructGetPtr($g_d_InvDepositAllMaterials)
+Global $g_d_DropBundle = DllStructCreate('ptr')
+Global $g_p_DropBundle = DllStructGetPtr($g_d_DropBundle)
 Global $g_i_LastTransactionType = -1
 Global $g_i_LastItemID = 0
 Global $g_i_LastQuantity = 0
@@ -139,7 +160,9 @@ Global $g_p_Dialog = DllStructGetPtr($g_d_Dialog)
 Global $g_d_Interact = DllStructCreate('ptr;dword')
 Global $g_p_Interact = DllStructGetPtr($g_d_Interact)
 Global $g_d_Xunlai = DllStructCreate('ptr;dword')
+Global $g_d_CloseDialog = DllStructCreate('ptr;dword')
 Global $g_p_Xunlai = DllStructGetPtr($g_d_Xunlai)
+Global $g_p_CloseDialog = DllStructGetPtr($g_d_CloseDialog)
 Global $g_d_AddNPC = DllStructCreate('ptr;dword')
 Global $g_p_AddNPC = DllStructGetPtr($g_d_AddNPC)
 Global $g_d_AddHero = DllStructCreate('ptr;dword')
@@ -172,6 +195,8 @@ Global $g_p_ActiveQuest = DllStructGetPtr($g_d_ActiveQuest)
 ;UIMsg
 Global $g_d_MoveMap = DllStructCreate('ptr;dword;dword;dword;dword;dword')
 Global $g_p_MoveMap = DllStructGetPtr($g_d_MoveMap)
+Global $g_d_ApplyUpgrade = DllStructCreate('ptr;dword;dword;dword;dword;dword')
+Global $g_p_ApplyUpgrade = DllStructGetPtr($g_d_ApplyUpgrade)
 Global $g_d_EquipItem = DllStructCreate('ptr;dword;dword;dword')
 Global $g_p_EquipItem = DllStructGetPtr($g_d_EquipItem)
 
@@ -190,6 +215,44 @@ Global $g_p_AcceptInvitation = DllStructGetPtr($g_d_AcceptInvitation)
 ;Bot related
 Global $g_bAutoStart = False  ; Flag for auto-start
 Global $g_s_MainCharName  = ""
+
+;Prop ray casting
+Global Const $GC_I_PROPRAY_MAX = 8            ; Rays carried by a single command
+Global Const $GC_I_PROPRAY_INPUT_SIZE = 28    ; Bytes per ray: origin[3] + dir[3] + dist
+Global Const $GC_I_PROPRAY_RESULT_SIZE = 12   ; Bytes per result: hit + distance + prop index
+Global Const $GC_I_PROPRAY_STATE_PENDING = 0  ; Command not processed yet
+Global Const $GC_I_PROPRAY_STATE_DONE = 1     ; Results available
+Global Const $GC_I_PROPRAY_STATE_SKIPPED = 2  ; No props loaded, native was never called
+Global Const $GC_F_PROPRAY_MIN_RANGE = 0.1    ; Below this the engine rejects the ray itself
+;Target guard diagnosis
+Global $g_p_TargetOrderCount    ; Pointer to the dequeued-order counter in GW memory
+Global $g_p_TargetRejectCount   ; Pointer to the rejected-order counter in GW memory
+Global $g_p_TargetRejectLast    ; Pointer to the last rejected agent id in GW memory
+
+Global $g_p_PropRayResult       ; Pointer to the result block in GW memory
+Global $g_p_PropRayReady        ; Pointer to the completion flag in GW memory
+Global $g_d_PropRay = DllStructCreate('ptr;dword;float[56]')  ; Command struct: ptr + count + rays
+Global $g_p_PropRay = DllStructGetPtr($g_d_PropRay)
+
+;Trade session natives
+Global Const $GC_I_TRADESESS_STATE_PENDING = 0   ; Command not processed yet
+Global Const $GC_I_TRADESESS_STATE_DONE = 1      ; Return value available
+Global Const $GC_I_TRADESESS_STATE_SKIPPED = 2   ; No trade context, native was never called
+Global Const $GC_I_TRADESESS_OP_NONE = 0         ; Context is idle, a new call is accepted
+Global Const $GC_I_TRADESESS_OP_ABORT = 1        ; Codes written while a call is in flight
+Global Const $GC_I_TRADESESS_OP_CONFIRM = 2
+Global Const $GC_I_TRADESESS_OP_OFFERITEM = 3
+Global Const $GC_I_TRADESESS_OP_REVOKECONFIRM = 4
+Global Const $GC_I_TRADESESS_OP_REVOKEITEM = 5
+Global Const $GC_I_TRADESESS_OP_REVOKESUBMIT = 6
+Global Const $GC_I_TRADESESS_OP_SUBMIT = 7
+Global Const $GC_I_TRADE_FLAG_ACTIVE = 1         ; Trade context flags
+Global Const $GC_I_TRADE_FLAG_SUBMITTED = 2
+Global Const $GC_I_TRADE_FLAG_CONFIRMED = 4
+Global $g_p_TradeSessResult      ; Pointer to the native return value in GW memory
+Global $g_p_TradeSessReady       ; Pointer to the completion flag in GW memory
+Global $g_d_TradeSession = DllStructCreate('ptr;ptr;dword;dword')  ; Command struct: ptr + native + 2 args
+Global $g_p_TradeSession = DllStructGetPtr($g_d_TradeSession)
 
 ;EncString Decoding
 Global $g_p_DecodeInputPtr      ; Pointer to encoded string input buffer in GW memory
